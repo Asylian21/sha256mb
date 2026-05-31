@@ -276,6 +276,19 @@ Contribution guidelines, generator rules, and the pull-request checklist are in
   high-throughput callers.
 - Expand benchmark coverage across more CPUs and Go releases.
 
+## Support This Project ₿
+
+If this project helped you understand Bitcoin security, benchmark Go code, or
+explain why brute force is not a business model, you can support continued
+research here:
+
+Bitcoin donation address:
+
+bc1q9c5mmx9d3ajevjrvvw9yf52jclsre8x86qhnak
+
+Every satoshi helps fund more experiments, better documentation, and fewer
+hand-wavy claims about cryptography.
+
 ## License
 
 `sha256mb` is free and open-source software under the MIT license. You may use,
