@@ -1,22 +1,22 @@
-# sha256mb
+# sha256mb: Multi-Buffer SHA-256 and Bitcoin HASH160 for Go
 
-[Go Reference](https://pkg.go.dev/github.com/Asylian21/sha256mb)
-[CI](https://github.com/Asylian21/sha256mb/actions/workflows/ci.yml)
-[Go Report Card](https://goreportcard.com/report/github.com/Asylian21/sha256mb)
-[License: MIT](LICENSE)
-[Free & Open Source](LICENSE)
+[![Go Reference](https://pkg.go.dev/badge/github.com/Asylian21/sha256mb.svg)](https://pkg.go.dev/github.com/Asylian21/sha256mb)
+[![CI](https://github.com/Asylian21/sha256mb/actions/workflows/ci.yml/badge.svg)](https://github.com/Asylian21/sha256mb/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Asylian21/sha256mb)](https://goreportcard.com/report/github.com/Asylian21/sha256mb)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-`sha256mb` is a high-performance, multi-buffer SHA-256 implementation for Go,
-built for Bitcoin-style HASH160 pipelines that need to hash many independent
-33-byte compressed public keys at once.
+`sha256mb` is a high-performance Go library for batched SHA-256 and Bitcoin
+HASH160 workloads. It is designed for compressed secp256k1 public keys, wallet
+tooling, address-indexing pipelines, brute-force research, and reproducible Go
+cryptography benchmarks.
 
-The library pairs a portable `crypto/sha256` scalar oracle with a real
-Go-assembly SIMD backend. On arm64 the hand-tuned 4-lane hardware-SHA kernel is
-the default and runs about **2.6x faster than scalar** on Apple M3, while keeping
-the hot path zero-allocation. The `hash160mb` subpackage builds the full Bitcoin
-`RIPEMD160(SHA256(x))` on top of it.
+The package combines a portable `crypto/sha256` scalar backend with a Go
+assembly SIMD backend. On arm64, the 4-lane hardware-SHA kernel is the default
+and runs about **2.6x faster than scalar** on Apple M3 while keeping the hot path
+zero-allocation. The `hash160mb` subpackage computes the full Bitcoin
+`RIPEMD160(SHA256(x))` HASH160 pipeline on top of it.
 
-This is free and open-source software released under the permissive MIT license.
+Released as free and open-source software under the permissive MIT license.
 
 ```go
 src := make([]byte, n*64) // n compressed pubkeys, 33 bytes each, 64-byte slots
@@ -52,7 +52,7 @@ business model.
 ## Highlights
 
 - **Multi-buffer SHA-256 for Go** through `Hash33(dst, src, n, stride)`.
-- **Bitcoin HASH160 ready** via the `hash160mb` subpackage.
+- **Bitcoin HASH160 ready** for `RIPEMD160(SHA256(compressed-public-key))`.
 - **arm64 hardware-SHA backend** (`sha2x4`) that interleaves 4 messages, with
   runtime dispatch.
 - **Portable scalar fallback** (`crypto/sha256`) on every Go architecture.
@@ -63,6 +63,14 @@ business model.
 - **Differential, property, race, and fuzz tests** against `crypto/sha256` and
   `golang.org/x/crypto/ripemd160`.
 - **Free and open source** under the permissive MIT license.
+
+## Use Cases
+
+- Bitcoin HASH160 batching for compressed secp256k1 public keys.
+- High-throughput Go SHA-256 benchmarks on Apple Silicon and ARMv8 hardware-SHA.
+- Wallet tooling, address-indexing jobs, public-key analysis, and repeatable
+  brute-force research.
+- Any workload that hashes many independent 33-byte messages with a fixed stride.
 
 ## Install
 
