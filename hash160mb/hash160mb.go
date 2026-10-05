@@ -65,10 +65,12 @@ func FromPubkeys33(dst, src []byte, n, stride int) {
 	if stride < MsgLen {
 		panic(fmt.Sprintf("hash160mb: stride %d < %d", stride, MsgLen))
 	}
-	if len(src) < (n-1)*stride+MsgLen {
+	// Validate without multiplying user-supplied ints: an overflow must never
+	// let an invalid batch reach the generated kernels or scratch allocation.
+	if len(src) < MsgLen || n-1 > (len(src)-MsgLen)/stride {
 		panic(fmt.Sprintf("hash160mb: src too short for %d %d-byte messages at stride %d", n, MsgLen, stride))
 	}
-	if len(dst) < n*Size {
+	if n > len(dst)/Size {
 		panic(fmt.Sprintf("hash160mb: dst too short for %d HASH160 digests", n))
 	}
 

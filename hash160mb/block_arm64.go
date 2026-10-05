@@ -3,7 +3,6 @@
 package hash160mb
 
 import (
-	"fmt"
 	"os"
 	"strings"
 
@@ -33,6 +32,11 @@ const (
 // mode is resolved once at init; the hot path never touches the environment.
 var mode = resolveMode(os.Getenv(forceEnv))
 
+// The dependency only reports neon-sha3 after a positive hardware capability
+// probe. Reusing that decision avoids assuming optional SHA3 instructions on
+// older arm64 cores, and resolves the gate once rather than on the hot path.
+var useFusedSHA3 = ripemd160mb.Backend() == "neon-sha3"
+
 func resolveMode(s string) fuseMode {
 	switch strings.ToLower(strings.TrimSpace(s)) {
 	case "staged", "off", "scalar":
@@ -46,12 +50,12 @@ func resolveMode(s string) fuseMode {
 
 // fusedActive reports whether the fused single-pass kernel runs.
 //
-// The default (fuseAuto) is the STAGED path: on Apple M-series the fused kernel
-// measures within noise of staged single-threaded and ~3% slower at 8 threads,
-// because both halves are throughput-bound and the staged path gives each its
-// own deeply-pipelined loop (see PERFORMANCE.md). The fused kernel is validated,
-// benchmarked and selectable via GOHASH160MB_FORCE=fused for reproducibility and
-// for cores where removing the intermediate digest buffer pays off.
+// The default (fuseAuto) is the STAGED path. Final Apple M5 Pro measurements
+// with Go 1.27.1 put the full downstream pipeline at 71.96 ns/key staged versus
+// 74.16 ns/key fused (+3.07%, p=0.002); at 18 threads the medians were 215.4M
+// versus 210.6M keys/s, with no significant difference (p=0.065). The optimized
+// fused SHA3 kernel remains selectable via GOHASH160MB_FORCE=fused for other
+// workloads and cores (see PERFORMANCE.md).
 //
 // The fused kernel hard-codes the ARMv8 SHA-256 instructions, so it is only ever
 // enabled when sha256mb selected its hardware backend — a condition that already
@@ -84,9 +88,17 @@ func fromPubkeys33Fused(dst, src []byte, n, stride int) bool {
 // path to the remaining tail. It is also the test entry point (FusedForTest) so
 // the fused kernel is covered even when GOHASH160MB_FORCE pins another mode.
 func fusedHashN(dst, src []byte, n, stride int) {
+	fusedHashNKernel(dst, src, n, stride, useFusedSHA3)
+}
+
+func fusedHashNKernel(dst, src []byte, n, stride int, sha3 bool) {
 	vecN := n - n%fusedLanes
 	if vecN > 0 {
-		hash160From33SHA2(dst[:vecN*Size], src, vecN, stride)
+		if sha3 {
+			hash160From33SHA2SHA3(dst[:vecN*Size], src, vecN, stride)
+		} else {
+			hash160From33SHA2(dst[:vecN*Size], src, vecN, stride)
+		}
 	}
 	if vecN != n {
 		stagedFromPubkeys33(dst[vecN*Size:n*Size], src[vecN*stride:], n-vecN, stride)
@@ -96,7 +108,12 @@ func fusedHashN(dst, src []byte, n, stride int) {
 // fusedBackend names the fused kernel when it is active.
 func fusedBackend() (string, bool) {
 	if fusedActive() {
-		return fmt.Sprintf("fused(sha256mb=%s, ripemd160mb=%s)", sha256mb.Backend(), ripemd160mb.Backend()), true
+		// This kernel contains its own SHA4 and NEON RIPEMD implementations;
+		// the sibling RIPEMD package's selected backend does not execute here.
+		if useFusedSHA3 {
+			return "fused(sha256mb=sha2x4, ripemd160mb=neon-sha3)", true
+		}
+		return "fused(sha256mb=sha2x4, ripemd160mb=neon)", true
 	}
 	return "", false
 }

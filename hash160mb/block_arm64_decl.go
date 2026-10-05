@@ -11,3 +11,9 @@ package hash160mb
 //
 //go:noescape
 func hash160From33SHA2(dst, src []byte, n, stride int)
+
+// hash160From33SHA2SHA3 also uses FEAT_SHA3's EOR3 and BCAX instructions in
+// the RIPEMD half. Dispatch requires the sibling library's positive SHA3 gate.
+//
+//go:noescape
+func hash160From33SHA2SHA3(dst, src []byte, n, stride int)

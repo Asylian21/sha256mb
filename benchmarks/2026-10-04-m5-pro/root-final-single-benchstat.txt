@@ -1,0 +1,17 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/btc-brute-force
+cpu: Apple M5 Pro
+                │ .local-perf/20261004-m5/root-final-staged-single.txt │ .local-perf/20261004-m5/root-final-fused-single.txt │
+                │                        sec/op                        │            sec/op              vs base              │
+KeyStreamPerKey                                            71.96n ± 2%                     74.16n ± 1%  +3.07% (p=0.002 n=6)
+
+                │ .local-perf/20261004-m5/root-final-staged-single.txt │ .local-perf/20261004-m5/root-final-fused-single.txt │
+                │                         B/op                         │               B/op                vs base           │
+KeyStreamPerKey                                             0.000 ± 0%                         0.000 ± 0%  ~ (p=1.000 n=6) ¹
+¹ all samples are equal
+
+                │ .local-perf/20261004-m5/root-final-staged-single.txt │ .local-perf/20261004-m5/root-final-fused-single.txt │
+                │                      allocs/op                       │            allocs/op              vs base           │
+KeyStreamPerKey                                             0.000 ± 0%                         0.000 ± 0%  ~ (p=1.000 n=6) ¹
+¹ all samples are equal

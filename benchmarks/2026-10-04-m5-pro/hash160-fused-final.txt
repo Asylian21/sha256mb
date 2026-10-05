@@ -1,0 +1,30 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+BenchmarkFromPubkeys33/active/n=6144         	    1718	    346446 ns/op	 585.23 MB/s	  17734382 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+BenchmarkFromPubkeys33/active/n=6144         	    1734	    345064 ns/op	 587.58 MB/s	  17805439 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+BenchmarkFromPubkeys33/active/n=6144         	    1707	    348336 ns/op	 582.06 MB/s	  17638151 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+BenchmarkFromPubkeys33/active/n=6144         	    1746	    344415 ns/op	 588.69 MB/s	  17838969 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+BenchmarkFromPubkeys33/active/n=6144         	    1740	    345934 ns/op	 586.10 MB/s	  17760641 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+BenchmarkFromPubkeys33/active/n=6144         	    1743	    346450 ns/op	 585.23 MB/s	  17734158 hashes/s	       0 B/op	       0 allocs/op
+PASS

@@ -2,6 +2,7 @@ package sha256mb
 
 import (
 	"bytes"
+	"strings"
 	"sync"
 	"testing"
 )
@@ -26,6 +27,42 @@ func TestHash33ZeroAllocEveryBackend(t *testing.T) {
 				t.Fatalf("backend %q: Hash33 allocated %v times per run, want 0", name, allocs)
 			}
 		})
+	}
+}
+
+// Overflowed lengths must be rejected before either a kernel runs or output is
+// modified. A runtime slice panic after hashing one message is too late.
+func TestHash33RejectsOverflowBeforeHashing(t *testing.T) {
+	maxInt := int(^uint(0) >> 1)
+	for _, tc := range []struct {
+		name   string
+		n      int
+		stride int
+	}{
+		{"huge count", maxInt, 64},
+		{"huge stride", 2, maxInt},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			dst := bytes.Repeat([]byte{0x5A}, 2*Size)
+			before := append([]byte(nil), dst...)
+			defer func() {
+				message, ok := recover().(string)
+				if !ok || !strings.HasPrefix(message, "sha256mb: src too short") {
+					t.Fatalf("expected input validation panic, got %q", message)
+				}
+				if !bytes.Equal(dst, before) {
+					t.Fatal("invalid batch modified output before rejecting it")
+				}
+			}()
+			Hash33(dst, make([]byte, MsgLen), tc.n, tc.stride)
+		})
+	}
+	// A single message does not consume a second stride, even at MaxInt.
+	src, want := makeStrided(t, 1, MsgLen)
+	dst := make([]byte, Size)
+	Hash33(dst, src, 1, maxInt)
+	if !bytes.Equal(dst, want) {
+		t.Fatal("single message at MaxInt stride produced an incorrect digest")
 	}
 }
 

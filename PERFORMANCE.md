@@ -112,6 +112,105 @@ backend that does not meet criterion 3 must not be wired as a default; it may
 still be kept behind `GOSHA256MB_FORCE` / `GOHASH160MB_FORCE`, but `Backend()`
 must never report a kernel that is not the one actually running.
 
+## Apple M5 Pro local tuning (2026-10-04)
+
+The final original-to-optimized comparison, Go 1.22.5, `GOMAXPROCS=1`, 6144
+messages, six paired measurements, includes the feature-gated fused SHA3
+kernel and the safe integer bounds checks:
+
+| Fused revision | Median time | Hashes/s | allocs/op |
+| -------------- | ----------- | -------- | --------- |
+| original NEON  | 470.9 µs    | 13.05M   | 0         |
+| final SHA3     | 346.2 µs    | 17.75M   | 0         |
+
+The final improvement is **36.02% higher throughput** and 26.48% less time
+(`p = 0.002`, six samples per revision). The [raw original](benchmarks/2026-10-04-m5-pro/hash160-fused-original.txt),
+[raw final](benchmarks/2026-10-04-m5-pro/hash160-fused-final.txt), and
+[benchstat comparison](benchmarks/2026-10-04-m5-pro/hash160-fused-benchstat.txt)
+are archived with this library. The following measurements record the
+intermediate candidates and explain the default-path choice.
+
+### NEON instruction and dependency tuning
+
+With Go 1.22.5 on `darwin/arm64`, `GOMAXPROCS=1`, eight alternating A/B pairs,
+and 500 ms per case, two changes improved the embedded four-message HASH160
+kernel: simplify the RIPEMD-160 Boolean expressions with NEON bit selection,
+and add the message/round constants to A independently of the Boolean function.
+The latter lets the core overlap these dependency chains before the rotation:
+
+| Messages | Before ns/op | After ns/op | Time change | allocs/op |
+| -------- | ------------ | ----------- | ----------- | --------- |
+| 6144     | 471914.5     | 368009.5    | -22.02%     | 0         |
+
+These are per-case medians; `benchstat` reports `p < 0.001` for this comparison.
+At 6144 messages the throughput moves from 13.02M to 16.70M hashes/s, a 28.23%
+increase. An earlier Boolean-only candidate had favorable medians but failed
+the significance check (`p = 0.065` at 6144), so it was not accepted on that
+evidence alone. Both final executables contain the original SHA4 kernel; forcing
+the fused path keeps these measurements independent of changes to the sibling
+RIPEMD library. The staged default remains available and uses that library's
+runtime-selected backend. `Backend()` now names the fused kernel's embedded
+SHA4/NEON implementation accurately, including when the sibling library is
+forced to a different backend.
+
+The same tuning run rejected two standalone SHA candidates: keeping the IV in
+vector registers and sharing the saved state produced no consistent gain, and
+a five-message interleave increased median time by 0.49% at 6144 messages and
+7.62% at 64 messages. The original four-message SHA kernel remains unchanged.
+
+Reproduce the fused measurement on the revisions being compared with:
+
+```sh
+GOMAXPROCS=1 GOHASH160MB_FORCE=fused \
+  go test -run '^$' \
+  -bench '^BenchmarkFromPubkeys33$/active/n=6144$' \
+  -benchmem -benchtime=500ms -count=8 ./hash160mb
+```
+
+The benchmark matrix also runs a named `fused` case wherever the hardware SHA
+backend is available; previously the fused runner was registered but omitted
+from the iteration list.
+
+### Feature-gated fused SHA3 comparison
+
+A second fused kernel uses EOR3 and BCAX in the RIPEMD half, with the same
+independent additions and adjusted round constants for complemented Boolean
+functions. It is selected only when the sibling RIPEMD library reports
+`neon-sha3`, which requires a positive hardware probe; other arm64 machines
+retain the NEON fused kernel. Both keep the original SHA4 half.
+
+Six alternating 500 ms measurements of the same Go 1.22.5 executable on Apple
+M5 Pro, `GOMAXPROCS=1`, 6144 messages, compare the public entry point:
+
+| Path               | Median ns/op | Hashes/s | allocs/op |
+| ------------------ | ------------ | -------- | --------- |
+| fused NEON         | 364041.5     | 16.88M   | 0         |
+| fused SHA3         | 342794.5     | 17.92M   | 0         |
+| staged SHA4 + SHA3 | 329902.5     | 18.62M   | 0         |
+
+Fused SHA3 improves throughput by 6.20% over fused NEON (`p = 0.002`). The staged
+pipeline is 3.91% faster than fused SHA3 (`p = 0.002`) and is still the default.
+Force each path with
+`GOHASH160MB_FORCE=fused` or `staged` and `GORIPEMD160MB_FORCE=neon` or
+`neon-sha3` when reproducing this comparison. The named benchmark matrix also
+exposes both fused kernels separately on supported hardware.
+
+### Final downstream staged versus fused choice
+
+The complete downstream key-generation/HASH160 pipeline was then compared with
+the same final executable, Go 1.27.1, changing only `GOHASH160MB_FORCE`:
+
+| Concurrency | Staged | Fused SHA3 | Statistical result |
+| ----------- | ------ | ---------- | ------------------ |
+| one thread  | 71.96 ns/key | 74.16 ns/key | fused +3.07% time, `p = 0.002` |
+| 18 threads  | 215.4M keys/s | 210.6M keys/s | no significant difference, `p = 0.065` |
+
+Both comparisons use six measurements per path. These whole-pipeline results
+are separate from the Go 1.22.5 HASH160-only measurements above. They support
+retaining staged as the default; the 18-thread medians do not establish a
+statistically significant winner. See the archived [single-thread comparison](benchmarks/2026-10-04-m5-pro/root-final-single-benchstat.txt)
+and [18-thread comparison](benchmarks/2026-10-04-m5-pro/root-final-mode-benchstat.txt).
+
 ## Recording results
 
 When you capture a new baseline, update the smoke-benchmark table in

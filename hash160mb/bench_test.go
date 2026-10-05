@@ -20,8 +20,11 @@ var benchPaths = map[string]func(dst, src []byte, n, stride int){
 // contract.
 func BenchmarkFromPubkeys33(b *testing.B) {
 	const stride = 64
-	for _, path := range []string{"active", "staged"} {
-		run := benchPaths[path]
+	for _, path := range []string{"active", "staged", "fused", "fused-neon", "fused-sha3"} {
+		run, ok := benchPaths[path]
+		if !ok {
+			continue
+		}
 		for _, n := range []int{1, 64, 1024, 6144} {
 			b.Run(fmt.Sprintf("%s/n=%d", path, n), func(b *testing.B) {
 				src := make([]byte, (n-1)*stride+MsgLen)

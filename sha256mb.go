@@ -57,14 +57,15 @@ func Hash33(dst, src []byte, n, stride int) {
 	if stride < MsgLen {
 		panic(fmt.Sprintf("sha256mb: stride %d < %d", stride, MsgLen))
 	}
-	needSrc := (n-1)*stride + MsgLen
-	needDst := n * Size
-	if len(src) < needSrc {
+	// Divide before multiplying: positive counts and strides can otherwise
+	// overflow int and accidentally admit an invalid batch to the assembly.
+	if len(src) < MsgLen || n-1 > (len(src)-MsgLen)/stride {
 		panic(fmt.Sprintf("sha256mb: src too short for %d %d-byte messages at stride %d", n, MsgLen, stride))
 	}
-	if len(dst) < needDst {
+	if n > len(dst)/Size {
 		panic(fmt.Sprintf("sha256mb: dst too short for %d SHA-256 digests", n))
 	}
+	needDst := n * Size // bounded by len(dst) above
 
 	b := active
 	if b.lanes <= 1 {

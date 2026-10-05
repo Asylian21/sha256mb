@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+- Reduce the embedded fused HASH160 kernel's RIPEMD-160 Boolean instruction
+  count and overlap message/round additions with the Boolean computation;
+  eight paired local Apple M5 Pro measurements show 22.02% less time at 6144
+  messages (`p < 0.001`), with zero allocations.
+- Include the fused kernel in the named benchmark matrix on supported arm64
+  builds and report its embedded SHA4/NEON backends accurately.
+- Retain the original SHA4 kernel after local register-layout and five-message
+  interleave experiments failed to show a consistent throughput improvement.
+- Reject overflowing positive message counts and strides before hashing or
+  writing output in both `Hash33` and `FromPubkeys33`.
+- Add a fused SHA3 variant using EOR3 and BCAX, enabled only when the sibling
+  RIPEMD library has positively selected its `neon-sha3` hardware backend.
+  Paired Apple M5 Pro measurements show 6.20% higher fused throughput than
+  optimized NEON (`p = 0.002`); the staged path remains the default.
+- Final original-to-SHA3-fused comparison on Apple M5 Pro with Go 1.22.5 shows
+  36.02% higher throughput (13.05M to 17.75M hashes/s, `p = 0.002`, six pairs).
+  Final downstream Go 1.27.1 measurements retain staged as the default: fused
+  takes 3.07% longer single-threaded, with no significant 18-thread difference.
+
 ## v0.1.0 - 2026-05-31
 
 First tagged release. The library is correctness-verified against the

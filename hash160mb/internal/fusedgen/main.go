@@ -1,4 +1,4 @@
-// Command fusedgen emits the arm64 fused HASH160 kernel block_arm64.s.
+// Command fusedgen emits the arm64 fused HASH160 NEON and SHA3 kernels.
 //
 // The kernel computes RIPEMD160(SHA256(msg)) for four independent 33-byte
 // messages per loop iteration WITHOUT ever writing the intermediate SHA-256
@@ -143,6 +143,15 @@ const (
 
 func main() {
 	root := repoRoot()
+	generate(root, false)
+	generate(root, true)
+}
+
+func generate(root string, sha3 bool) {
+	name, filename := "hash160From33SHA2", "block_arm64.s"
+	if sha3 {
+		name, filename = "hash160From33SHA2SHA3", "block_sha3_arm64.s"
+	}
 	var b strings.Builder
 	p := func(format string, args ...any) { fmt.Fprintf(&b, format+"\n", args...) }
 
@@ -151,12 +160,12 @@ func main() {
 	p("")
 	p("#include \"textflag.h\"")
 	p("")
-	p("// func hash160From33SHA2(dst, src []byte, n, stride int)")
+	p("// func %s(dst, src []byte, n, stride int)", name)
 	p("//")
 	p("// Computes RIPEMD160(SHA256(msg)) for n 33-byte messages, %d per loop", lanes)
 	p("// iteration. The caller guarantees n is a positive multiple of %d; the", lanes)
 	p("// short tail is handled in Go. Only bytes 0..32 of each message are read.")
-	p("TEXT ·hash160From33SHA2(SB), NOSPLIT, $0-64")
+	p("TEXT ·%s(SB), NOSPLIT, $0-64", name)
 	p("\tMOVD\tdst_base+0(FP), R0")
 	p("\tMOVD\tsrc_base+24(FP), R1")
 	p("\tMOVD\tn+48(FP), R2")
@@ -205,7 +214,9 @@ func main() {
 	p("\t// clobbers V%d/V%d/V%d).", regX8, regX14, regOnes)
 	bcast(&b, 0x80, regX8)
 	bcast(&b, 0x100, regX14)
-	bcast(&b, 0xffffffff, regOnes)
+	if !sha3 {
+		bcast(&b, 0xffffffff, regOnes)
+	}
 	p("")
 	ripeTranspose(&b)
 
@@ -223,15 +234,25 @@ func main() {
 		if j%16 == 0 {
 			round := j / 16
 			p("\t// RIPEMD round %d additive constants", round)
+			lk, rk := leftK[round], rightK[round]
+			if sha3 {
+				// BCAX emits ~F for f3/f5. A + K + F = A + (K-1) - ~F.
+				if round == 2 || round == 4 {
+					lk--
+				}
+				if 4-round == 2 || 4-round == 4 {
+					rk--
+				}
+			}
 			if leftK[round] != 0 {
-				bcast(&b, leftK[round], regLK)
+				bcast(&b, lk, regLK)
 			}
 			if rightK[round] != 0 {
-				bcast(&b, rightK[round], regRK)
+				bcast(&b, rk, regRK)
 			}
 		}
-		ripeStep(&b, true, j, &leftState, freeReg(leftState, rightState))
-		ripeStep(&b, false, j, &rightState, freeReg(leftState, rightState))
+		ripeStep(&b, true, j, &leftState, freeReg(leftState, rightState), sha3)
+		ripeStep(&b, false, j, &rightState, freeReg(leftState, rightState), sha3)
 	}
 
 	ripeCombine(&b, leftState, rightState)
@@ -246,9 +267,12 @@ func main() {
 	p("\tRET")
 	p("")
 
-	emitConstants(&b)
+	if !sha3 {
+		// Both assembly functions share the same read-only SHA tables.
+		emitConstants(&b)
+	}
 
-	write(filepath.Join(root, "hash160mb", "block_arm64.s"), []byte(b.String()))
+	write(filepath.Join(root, "hash160mb", filename), []byte(b.String()))
 }
 
 // baseReg returns the general register holding lane m's message base pointer.
@@ -392,7 +416,7 @@ func xreg(idx int) (reg int, skip bool) {
 	}
 }
 
-func ripeStep(b *strings.Builder, left bool, j int, st *[5]int, tmp int) {
+func ripeStep(b *strings.Builder, left bool, j int, st *[5]int, tmp int, sha3 bool) {
 	a, bb, c, d, e := st[0], st[1], st[2], st[3], st[4]
 	var idx, rot, fn, kreg int
 	var hasK bool
@@ -406,13 +430,20 @@ func ripeStep(b *strings.Builder, left bool, j int, st *[5]int, tmp int) {
 
 	p := func(format string, args ...any) { fmt.Fprintf(b, format+"\n", args...) }
 	p("\t// RIPEMD %s step %d", side(left), j)
-	emitF(b, fn, bb, c, d, tmp)
-	p("\tVADD\tV%d.S4, V%d.S4, V%d.S4", a, tmp, tmp)
+	// Neither the Boolean function nor the other pipeline reads A. Add the
+	// message/constant terms to A independently while F(B,C,D) is computed,
+	// shortening the dependency chain that feeds the rotation.
 	if xr, skip := xreg(idx); !skip {
-		p("\tVADD\tV%d.S4, V%d.S4, V%d.S4", xr, tmp, tmp)
+		p("\tVADD\tV%d.S4, V%d.S4, V%d.S4", xr, a, a)
 	}
 	if hasK {
-		p("\tVADD\tV%d.S4, V%d.S4, V%d.S4", kreg, tmp, tmp)
+		p("\tVADD\tV%d.S4, V%d.S4, V%d.S4", kreg, a, a)
+	}
+	emitF(b, fn, bb, c, d, tmp, sha3)
+	if sha3 && (fn == 2 || fn == 4) {
+		p("\tVSUB\tV%d.S4, V%d.S4, V%d.S4", tmp, a, tmp)
+	} else {
+		p("\tVADD\tV%d.S4, V%d.S4, V%d.S4", a, tmp, tmp)
 	}
 	rotl(b, tmp, a, rot)
 	p("\tVADD\tV%d.S4, V%d.S4, V%d.S4", e, a, a)
@@ -420,28 +451,37 @@ func ripeStep(b *strings.Builder, left bool, j int, st *[5]int, tmp int) {
 	*st = [5]int{e, a, bb, tmp, d}
 }
 
-func emitF(b *strings.Builder, fn, bb, c, d, out int) {
+func emitF(b *strings.Builder, fn, bb, c, d, out int, sha3 bool) {
 	p := func(format string, args ...any) { fmt.Fprintf(b, format+"\n", args...) }
+	if sha3 {
+		switch fn {
+		case 0:
+			p("\tVEOR3\tV%d.B16, V%d.B16, V%d.B16, V%d.B16", d, c, bb, out)
+			return
+		case 2: // ~f3 = D ^ (C & ~B); the round subtracts it using K-1.
+			p("\tVBCAX\tV%d.B16, V%d.B16, V%d.B16, V%d.B16", bb, c, d, out)
+			return
+		case 4: // ~f5 = B ^ (D & ~C); the round subtracts it using K-1.
+			p("\tVBCAX\tV%d.B16, V%d.B16, V%d.B16, V%d.B16", c, d, bb, out)
+			return
+		}
+	}
 	switch fn {
 	case 0: // f1 = B ^ C ^ D
 		p("\tVEOR\tV%d.B16, V%d.B16, V%d.B16", c, bb, out)
 		p("\tVEOR\tV%d.B16, V%d.B16, V%d.B16", d, out, out)
 	case 1: // f2 = D ^ (B & (C ^ D))
-		p("\tVEOR\tV%d.B16, V%d.B16, V%d.B16", c, d, out)
-		p("\tVAND\tV%d.B16, V%d.B16, V%d.B16", bb, out, out)
-		p("\tVEOR\tV%d.B16, V%d.B16, V%d.B16", d, out, out)
+		p("\tVMOV\tV%d.B16, V%d.B16", bb, out)
+		p("\tVBSL\tV%d.B16, V%d.B16, V%d.B16", d, c, out)
 	case 2: // f3 = (B | ~C) ^ D
-		p("\tVMOV\tV%d.B16, V%d.B16", c, out)
-		p("\tVEOR\tV%d.B16, V%d.B16, V%d.B16", regOnes, out, out)
+		p("\tVEOR\tV%d.B16, V%d.B16, V%d.B16", regOnes, c, out)
 		p("\tVORR\tV%d.B16, V%d.B16, V%d.B16", out, bb, out)
 		p("\tVEOR\tV%d.B16, V%d.B16, V%d.B16", d, out, out)
 	case 3: // f4 = C ^ (D & (B ^ C))
-		p("\tVEOR\tV%d.B16, V%d.B16, V%d.B16", bb, c, out)
-		p("\tVAND\tV%d.B16, V%d.B16, V%d.B16", d, out, out)
-		p("\tVEOR\tV%d.B16, V%d.B16, V%d.B16", c, out, out)
-	case 4: // f5 = B ^ (C | ~D)
 		p("\tVMOV\tV%d.B16, V%d.B16", d, out)
-		p("\tVEOR\tV%d.B16, V%d.B16, V%d.B16", regOnes, out, out)
+		p("\tVBSL\tV%d.B16, V%d.B16, V%d.B16", c, bb, out)
+	case 4: // f5 = B ^ (C | ~D)
+		p("\tVEOR\tV%d.B16, V%d.B16, V%d.B16", regOnes, d, out)
 		p("\tVORR\tV%d.B16, V%d.B16, V%d.B16", out, c, out)
 		p("\tVEOR\tV%d.B16, V%d.B16, V%d.B16", bb, out, out)
 	default:

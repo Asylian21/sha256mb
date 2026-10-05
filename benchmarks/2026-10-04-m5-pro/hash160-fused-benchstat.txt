@@ -1,0 +1,24 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+                            │ .local-perf/20261004-m5/hash160-fused-original.txt │ .local-perf/20261004-m5/hash160-fused-final.txt │
+                            │                       sec/op                       │          sec/op           vs base               │
+FromPubkeys33/active/n=6144                                          470.9µ ± 1%                346.2µ ± 1%  -26.48% (p=0.002 n=6)
+
+                            │ .local-perf/20261004-m5/hash160-fused-original.txt │ .local-perf/20261004-m5/hash160-fused-final.txt │
+                            │                        B/s                         │           B/s             vs base               │
+FromPubkeys33/active/n=6144                                         410.6Mi ± 1%               558.5Mi ± 1%  +36.02% (p=0.002 n=6)
+
+                            │ .local-perf/20261004-m5/hash160-fused-original.txt │ .local-perf/20261004-m5/hash160-fused-final.txt │
+                            │                      hashes/s                      │         hashes/s          vs base               │
+FromPubkeys33/active/n=6144                                          13.05M ± 1%                17.75M ± 1%  +36.02% (p=0.002 n=6)
+
+                            │ .local-perf/20261004-m5/hash160-fused-original.txt │ .local-perf/20261004-m5/hash160-fused-final.txt │
+                            │                        B/op                        │             B/op              vs base           │
+FromPubkeys33/active/n=6144                                           0.000 ± 0%                     0.000 ± 0%  ~ (p=1.000 n=6) ¹
+¹ all samples are equal
+
+                            │ .local-perf/20261004-m5/hash160-fused-original.txt │ .local-perf/20261004-m5/hash160-fused-final.txt │
+                            │                     allocs/op                      │          allocs/op            vs base           │
+FromPubkeys33/active/n=6144                                           0.000 ± 0%                     0.000 ± 0%  ~ (p=1.000 n=6) ¹
+¹ all samples are equal

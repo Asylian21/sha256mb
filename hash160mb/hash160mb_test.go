@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"strings"
 	"sync"
 	"testing"
 
@@ -23,6 +24,39 @@ func referenceHash160(msg []byte) [Size]byte {
 	var out [Size]byte
 	copy(out[:], h.Sum(nil))
 	return out
+}
+
+func TestFromPubkeys33RejectsOverflowBeforeHashing(t *testing.T) {
+	maxInt := int(^uint(0) >> 1)
+	for _, tc := range []struct {
+		name   string
+		n      int
+		stride int
+	}{
+		{"huge count", maxInt, 64},
+		{"huge stride", 2, maxInt},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			dst := bytes.Repeat([]byte{0x5A}, 2*Size)
+			before := append([]byte(nil), dst...)
+			defer func() {
+				message, ok := recover().(string)
+				if !ok || !strings.HasPrefix(message, "hash160mb: src too short") {
+					t.Fatalf("expected input validation panic, got %q", message)
+				}
+				if !bytes.Equal(dst, before) {
+					t.Fatal("invalid batch modified output before rejecting it")
+				}
+			}()
+			FromPubkeys33(dst, make([]byte, MsgLen), tc.n, tc.stride)
+		})
+	}
+	src, want := makeStrided(t, 1, MsgLen)
+	dst := make([]byte, Size)
+	FromPubkeys33(dst, src, 1, maxInt)
+	if !bytes.Equal(dst, want) {
+		t.Fatal("single message at MaxInt stride produced an incorrect digest")
+	}
 }
 
 func randomBytes(t testing.TB, n int) []byte {

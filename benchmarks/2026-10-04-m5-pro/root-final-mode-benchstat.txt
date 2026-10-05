@@ -1,0 +1,20 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/btc-brute-force
+cpu: Apple M5 Pro
+                     │ .local-perf/20261004-m5/root-final-staged-parallel.txt │ .local-perf/20261004-m5/root-final-fused-parallel.txt │
+                     │                         sec/op                         │                sec/op                 vs base         │
+KeyStreamParallel-18                                              28.52µ ± 3%                            29.17µ ± 4%  ~ (p=0.065 n=6)
+
+                     │ .local-perf/20261004-m5/root-final-staged-parallel.txt │ .local-perf/20261004-m5/root-final-fused-parallel.txt │
+                     │                        hashes/s                        │               hashes/s                vs base         │
+KeyStreamParallel-18                                              215.4M ± 3%                            210.6M ± 3%  ~ (p=0.065 n=6)
+
+                     │ .local-perf/20261004-m5/root-final-staged-parallel.txt │ .local-perf/20261004-m5/root-final-fused-parallel.txt │
+                     │                          B/op                          │              B/op               vs base               │
+KeyStreamParallel-18                                               582.5 ± 7%                       433.5 ± 2%  -25.58% (p=0.002 n=6)
+
+                     │ .local-perf/20261004-m5/root-final-staged-parallel.txt │ .local-perf/20261004-m5/root-final-fused-parallel.txt │
+                     │                       allocs/op                        │             allocs/op               vs base           │
+KeyStreamParallel-18                                               0.000 ± 0%                           0.000 ± 0%  ~ (p=1.000 n=6) ¹
+¹ all samples are equal
