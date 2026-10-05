@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.2.0 - 2026-10-05
 
 - Reduce the embedded fused HASH160 kernel's RIPEMD-160 Boolean instruction
   count and overlap message/round additions with the Boolean computation;

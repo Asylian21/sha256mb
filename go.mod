@@ -5,7 +5,7 @@ go 1.22
 toolchain go1.22.5
 
 require (
-	github.com/Asylian21/ripemd160-asm v0.1.1
+	github.com/Asylian21/ripemd160-asm v0.2.0
 	golang.org/x/crypto v0.24.0
 )
 
