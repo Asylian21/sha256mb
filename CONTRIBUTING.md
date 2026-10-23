@@ -16,12 +16,16 @@ Run these before opening a pull request:
 ```sh
 gofmt -l .                              # must print nothing
 go vet ./...
-staticcheck ./...
+GOTOOLCHAIN=go1.22.5 staticcheck ./...  # pinned lint toolchain
 
 go test ./...                           # native backend
 GOSHA256MB_FORCE=scalar go test ./...   # scalar oracle
 go test -race ./...                     # race detector
 ```
+
+The pinned `staticcheck` 2024.1.1 predates newer Go export-data formats. Run
+linting with Go 1.22.5; runtime tests and performance measurements may use a
+newer Go toolchain.
 
 On arm64, also exercise the forced kernels so the SIMD and fused paths are
 covered, not just whichever happens to be the default:
@@ -52,6 +56,11 @@ they are validated by `go vet`, the cross-build job, and the `go generate`
 clean-tree check instead.
 
 ## Fuzzing
+
+On Darwin and Linux, protected-page tests check exact input/output access
+bounds. This is required for assembly: a minimum-length Go slice alone cannot
+detect an unused read past its end. The tests cover tight and odd strides,
+unaligned addresses, and each four-lane tail.
 
 Every fast path is differentially fuzzed against the standard-library oracles
 (`crypto/sha256`, and `golang.org/x/crypto/ripemd160` for HASH160):

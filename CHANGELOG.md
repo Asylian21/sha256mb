@@ -2,6 +2,19 @@
 
 ## v0.2.0 - 2026-10-05
 
+- Hash single-message HASH160 batches and fused one-message tails with stack
+  intermediates, avoiding pooled scratch and repeated batch dispatch. Keep
+  larger batches on the existing pipeline after paired timing rejected the
+  broader short-batch and SHA assembly candidates. The selected one-message
+  branch improves throughput by 11.72% (`p<0.001`, Apple M5 Pro/Go 1.27.1);
+  three-message calls show a small 0.35% time cost (`p=0.007`).
+
+- Validate exact assembly reads and writes against protected memory pages on
+  Darwin and Linux, covering tight/odd/production strides and all SHA4 tails.
+- Differential fuzzing varies stride and byte alignment. Known SHA-256 and
+  HASH160 vectors use pinned digests and exercise vector groups plus tails.
+- Expand benchmark coverage around the four-lane and 6144-message boundaries.
+
 - Reduce the embedded fused HASH160 kernel's RIPEMD-160 Boolean instruction
   count and overlap message/round additions with the Boolean computation;
   eight paired local Apple M5 Pro measurements show 22.02% less time at 6144

@@ -1,0 +1,60 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/fused-sha3/n=6144         	    1028	    343901 ns/op	 589.57 MB/s	  17865671 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/fused-sha3/n=6144         	    1045	    343243 ns/op	 590.70 MB/s	  17899960 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/fused-sha3/n=6144         	    1044	    343037 ns/op	 591.05 MB/s	  17910590 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/fused-sha3/n=6144         	    1047	    343435 ns/op	 590.36 MB/s	  17889881 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/fused-sha3/n=6144         	    1005	    345406 ns/op	 587.00 MB/s	  17787965 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/fused-sha3/n=6144         	    1046	    343356 ns/op	 590.50 MB/s	  17894072 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/fused-sha3/n=6144         	    1038	    344003 ns/op	 589.39 MB/s	  17860376 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/fused-sha3/n=6144         	    1044	    343785 ns/op	 589.76 MB/s	  17871685 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/fused-sha3/n=6144         	    1041	    343233 ns/op	 590.71 MB/s	  17900394 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/fused-sha3/n=6144         	    1047	    343240 ns/op	 590.70 MB/s	  17900017 hashes/s	       0 B/op	       0 allocs/op
+PASS

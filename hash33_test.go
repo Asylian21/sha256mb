@@ -96,21 +96,24 @@ func TestHash33Deterministic(t *testing.T) {
 func TestHash33KnownVector(t *testing.T) {
 	// 0x02 followed by the secp256k1 generator x-coordinate.
 	msg := mustHex(t, "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798")
-	// crypto/sha256 of that 33-byte message (oracle-derived, pinned here).
-	want := referenceSum33(msg)
+	// Pin the digest so this test does not depend on the reference helper.
+	digest := mustHex(t, "0f715baf5d4c2ed329785cef29e562f73488c8a2bb9dbc5700b361d54b9b0554")
+	const n = 9 // two complete SHA4 groups and a scalar tail
+	src := bytes.Repeat(msg, n)
+	want := bytes.Repeat(digest, n)
 	for _, name := range availableBackendsForTest() {
 		withBackend(t, name, func() {
-			dst := make([]byte, Size)
-			Hash33(dst, msg, 1, MsgLen)
-			if !bytes.Equal(dst, want[:]) {
-				t.Fatalf("backend=%s known-vector mismatch:\n got  %x\n want %x", name, dst, want[:])
+			dst := make([]byte, n*Size)
+			Hash33(dst, src, n, MsgLen)
+			if !bytes.Equal(dst, want) {
+				t.Fatalf("backend=%s known-vector mismatch:\n got  %x\n want %x", name, dst, want)
 			}
 		})
 	}
 }
 
 // FuzzHash33 explores arbitrary inputs: the body is split into 33-byte
-// messages, hashed through every available backend at a padded stride, and each
+// messages, hashed through every backend at varied strides and alignments. Each
 // lane is compared against the independent crypto/sha256 reference.
 func FuzzHash33(f *testing.F) {
 	for _, seed := range [][]byte{
@@ -126,9 +129,10 @@ func FuzzHash33(f *testing.F) {
 		if n == 0 {
 			return
 		}
-		const stride = 64
-		// Re-pack the fuzz bytes into a strided buffer with poisoned padding.
-		src := make([]byte, (n-1)*stride+MsgLen)
+		stride := MsgLen + int(data[0]%66)
+		offset := int(data[len(data)-1] % 16)
+		// Re-pack at tight or padded strides and arbitrary byte alignments.
+		src := make([]byte, offset+(n-1)*stride+MsgLen)[offset:]
 		for i := range src {
 			src[i] = 0xEE
 		}
@@ -143,10 +147,10 @@ func FuzzHash33(f *testing.F) {
 			func() {
 				restore := forceBackendForTest(name)
 				defer restore()
-				dst := make([]byte, n*Size)
+				dst := make([]byte, offset+n*Size)[offset:]
 				Hash33(dst, src, n, stride)
 				if !bytes.Equal(dst, want) {
-					t.Fatalf("backend=%s n=%d mismatch", name, n)
+					t.Fatalf("backend=%s n=%d stride=%d offset=%d mismatch", name, n, stride, offset)
 				}
 			}()
 		}

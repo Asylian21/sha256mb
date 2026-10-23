@@ -145,7 +145,8 @@ agrees.
   the same correctness suite, including the lane/tail boundary counts and
   poisoned inter-message padding.
 - `Hash33` and `FromPubkeys33` are asserted to be zero-allocation and to respect
-  their buffer bounds.
+  their buffer bounds. Darwin/Linux tests abut exact-size buffers against
+  protected pages, detecting assembly accesses that Go slice bounds cannot.
 - Tests pass under the race detector and under forced-scalar / forced-staged
   execution.
 - `gofmt` and `go vet` are clean, and `go generate ./...` produces no diff.

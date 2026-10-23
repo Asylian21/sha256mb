@@ -1,0 +1,80 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/active/n=1         	 1409661	       147.9 ns/op	 223.06 MB/s	   6759486 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=2         	  728458	       328.8 ns/op	 200.72 MB/s	   6082518 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=3         	  491618	       486.7 ns/op	 203.40 MB/s	   6163643 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/active/n=1         	 1589006	       154.2 ns/op	 213.97 MB/s	   6484032 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=2         	  739048	       327.4 ns/op	 201.56 MB/s	   6107814 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=3         	  494865	       487.1 ns/op	 203.25 MB/s	   6159080 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/active/n=1         	 1545208	       155.4 ns/op	 212.42 MB/s	   6437004 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=2         	  730927	       330.4 ns/op	 199.75 MB/s	   6053193 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=3         	  495445	       487.7 ns/op	 202.98 MB/s	   6150867 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/active/n=1         	 1569700	       154.9 ns/op	 213.02 MB/s	   6455092 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=2         	  729916	       336.0 ns/op	 196.41 MB/s	   5951875 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=3         	  489733	       488.1 ns/op	 202.82 MB/s	   6146216 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/active/n=1         	 1606461	       152.0 ns/op	 217.17 MB/s	   6580953 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=2         	  737014	       326.5 ns/op	 202.13 MB/s	   6125101 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=3         	  490350	       485.5 ns/op	 203.90 MB/s	   6178705 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/active/n=1         	 1589868	       152.7 ns/op	 216.10 MB/s	   6548540 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=2         	  738830	       327.0 ns/op	 201.82 MB/s	   6115671 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=3         	  497130	       494.8 ns/op	 200.08 MB/s	   6063159 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/active/n=1         	 1595049	       156.3 ns/op	 211.13 MB/s	   6398027 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=2         	  739684	       326.8 ns/op	 201.93 MB/s	   6119178 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=3         	  491450	       486.4 ns/op	 203.52 MB/s	   6167353 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/active/n=1         	 1543762	       151.5 ns/op	 217.75 MB/s	   6598604 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=2         	  738679	       326.8 ns/op	 201.94 MB/s	   6119445 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=3         	  493404	       485.7 ns/op	 203.85 MB/s	   6177144 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/active/n=1         	 1632169	       151.1 ns/op	 218.44 MB/s	   6619507 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=2         	  738896	       326.0 ns/op	 202.47 MB/s	   6135490 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=3         	  495189	       485.1 ns/op	 204.09 MB/s	   6184565 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb/hash160mb
+cpu: Apple M5 Pro
+BenchmarkFromPubkeys33/active/n=1         	 1606023	       156.6 ns/op	 210.76 MB/s	   6386670 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=2         	  741121	       326.5 ns/op	 202.17 MB/s	   6126342 hashes/s	       0 B/op	       0 allocs/op
+BenchmarkFromPubkeys33/active/n=3         	  496260	       486.6 ns/op	 203.47 MB/s	   6165682 hashes/s	       0 B/op	       0 allocs/op
+PASS

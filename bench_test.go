@@ -15,7 +15,7 @@ func benchCounts(lanes int) []int {
 	if lanes > 1 {
 		ns = append(ns, lanes-1, lanes, lanes+1)
 	}
-	return append(ns, 64, 1024, 6144)
+	return append(ns, 64, 1024, 6143, 6144, 6145)
 }
 
 // BenchmarkHash33 measures Hash33 across every available backend and a range of

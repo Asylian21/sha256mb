@@ -1,0 +1,60 @@
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb
+cpu: Apple M5 Pro
+BenchmarkHash33/sha2x4/n=6144         	    3823	     87002 ns/op	2330.44 MB/s	  70619477 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb
+cpu: Apple M5 Pro
+BenchmarkHash33/sha2x4/n=6144         	    4112	     86894 ns/op	2333.33 MB/s	  70706962 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb
+cpu: Apple M5 Pro
+BenchmarkHash33/sha2x4/n=6144         	    4110	     89092 ns/op	2275.77 MB/s	  68962781 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb
+cpu: Apple M5 Pro
+BenchmarkHash33/sha2x4/n=6144         	    4096	     86916 ns/op	2332.73 MB/s	  70688680 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb
+cpu: Apple M5 Pro
+BenchmarkHash33/sha2x4/n=6144         	    4016	     88791 ns/op	2283.48 MB/s	  69197219 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb
+cpu: Apple M5 Pro
+BenchmarkHash33/sha2x4/n=6144         	    3918	     90020 ns/op	2252.30 MB/s	  68253013 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb
+cpu: Apple M5 Pro
+BenchmarkHash33/sha2x4/n=6144         	    3978	     87860 ns/op	2307.66 MB/s	  69930183 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb
+cpu: Apple M5 Pro
+BenchmarkHash33/sha2x4/n=6144         	    4110	     90895 ns/op	2230.62 MB/s	  67594807 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb
+cpu: Apple M5 Pro
+BenchmarkHash33/sha2x4/n=6144         	    3948	     91178 ns/op	2223.69 MB/s	  67385299 hashes/s	       0 B/op	       0 allocs/op
+PASS
+goos: darwin
+goarch: arm64
+pkg: github.com/Asylian21/sha256mb
+cpu: Apple M5 Pro
+BenchmarkHash33/sha2x4/n=6144         	    4108	     87350 ns/op	2321.16 MB/s	  70338320 hashes/s	       0 B/op	       0 allocs/op
+PASS

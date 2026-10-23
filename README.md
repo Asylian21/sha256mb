@@ -207,7 +207,7 @@ via `x/sys/cpu` on other arm64 platforms.
 
 ## Performance
 
-Latest local Apple M3 smoke benchmark (`GOMAXPROCS=1`, Go 1.22.5, `n = 6144` —
+Historical Apple M3 smoke benchmark (`GOMAXPROCS=1`, Go 1.22.5, `n = 6144` —
 the batch size the downstream bruteforcer uses, `-count=8` median):
 
 | Backend  | ns/op  | MB/s   | hashes/s   | allocs/op |
@@ -218,6 +218,20 @@ the batch size the downstream bruteforcer uses, `-count=8` median):
 The `sha2x4` backend delivers about **2.6x** the scalar throughput at large
 batches (2.57–2.67x across thermal states), with zero allocations on both paths
 and no regression at the lane/tail boundary counts.
+
+The current Apple M5 Pro baseline (`darwin/arm64`, Go 1.27.1, `-pgo=off`,
+`GOMAXPROCS=1`, `n=6144`, ten measurements) is:
+
+| Backend | ns/op | MB/s | hashes/s | allocs/op |
+| ------- | ----- | ---- | -------- | --------- |
+| `sha2x4` | 88330 | 2295 | 69,560,000 | 0 |
+
+These are medians from the [original SHA4 measurements](benchmarks/2026-10-05-m5-pro/sha-original.txt).
+A setup/padding candidate did not show a significant gain (`p=0.280`) and was
+rejected; the SHA4 assembly is unchanged. A separate single-message HASH160
+shortcut improves throughput by 11.72% in a ten-sample comparison (`p<0.001`),
+with a 0.35% time cost at three messages. See [PERFORMANCE.md](PERFORMANCE.md)
+for the complete comparison and validation limits.
 
 Reproduce with:
 
@@ -241,7 +255,8 @@ This repository treats performance claims as secondary to correctness:
   `golang.org/x/crypto/ripemd160` (the `btcutil.Hash160` algorithm).
 - Every implemented backend — scalar, `sha2x4`, and the fused HASH160 kernel —
   passes the same contract tests, including lane boundaries, the scalar tail,
-  and poisoned inter-message padding that catches any read past byte 33.
+  and poisoned inter-message padding. Darwin/Linux protected-page tests also
+  catch assembly accesses beyond the exact input/output buffers.
 - `Hash33` and `FromPubkeys33` are tested for zero allocations, bounds safety,
   and concurrent use, including under the race detector.
 

@@ -16,6 +16,7 @@
 package hash160mb
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"sync"
 
@@ -84,6 +85,15 @@ func FromPubkeys33(dst, src []byte, n, stride int) {
 // for the fused kernel: a full multi-buffer SHA-256 pass into a pooled scratch,
 // then a full multi-buffer RIPEMD-160 pass over those digests.
 func stagedFromPubkeys33(dst, src []byte, n, stride int) {
+	if n == 1 {
+		// A single message uses scalar tails in both batch kernels. Keep its
+		// intermediates on the stack, avoiding the pool and batch dispatch.
+		// Complete both hashes before writing dst, also allowing overlap.
+		sum := sha256.Sum256(src[:MsgLen])
+		digest := ripemd160mb.Sum(sum[:])
+		copy(dst[:Size], digest[:])
+		return
+	}
 	need := n * sha256mb.Size
 	bp := scratchPool.Get().(*[]byte)
 	if cap(*bp) < need {

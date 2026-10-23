@@ -136,12 +136,18 @@ func TestFromPubkeys33KnownVector(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := referenceHash160(gen)
+	digest, err := hex.DecodeString("751e76e8199196d454941c45d1b3a323f1433bd6")
+	if err != nil {
+		t.Fatal(err)
+	}
+	const n = 9 // exercises two fused groups plus the staged tail
+	src := bytes.Repeat(gen, n)
+	want := bytes.Repeat(digest, n)
 	for name, run := range runners {
-		dst := make([]byte, Size)
-		run(dst, gen, 1, MsgLen)
-		if !bytes.Equal(dst, want[:]) {
-			t.Fatalf("path=%s known-vector mismatch:\n got  %x\n want %x", name, dst, want[:])
+		dst := make([]byte, n*Size)
+		run(dst, src, n, MsgLen)
+		if !bytes.Equal(dst, want) {
+			t.Fatalf("path=%s known-vector mismatch:\n got  %x\n want %x", name, dst, want)
 		}
 	}
 }
@@ -167,8 +173,45 @@ func TestFromPubkeys33ZeroAlloc(t *testing.T) {
 	}
 }
 
-// TestFromPubkeys33RespectsBounds checks no write past dst[:n*Size]; the src is
-// sized to the exact minimum so any over-read trips the runtime bounds check.
+// Short batches and fused tails preserve zero allocations after warm-up.
+func TestFromPubkeys33SmallZeroAlloc(t *testing.T) {
+	for name, run := range runners {
+		for n := 1; n <= 7; n++ {
+			src, _ := makeStrided(t, n, 64)
+			dst := make([]byte, n*Size)
+			if allocs := testing.AllocsPerRun(100, func() { run(dst, src, n, 64) }); allocs != 0 {
+				t.Fatalf("path=%s n=%d allocated %v times, want 0", name, n, allocs)
+			}
+		}
+	}
+}
+
+// The short-path optimization preserves staged behavior with overlapping buffers.
+func TestFromPubkeys33SmallOverlap(t *testing.T) {
+	for name, run := range runners {
+		for n := 1; n <= 3; n++ {
+			for _, stride := range []int{33, 64} {
+				for _, offset := range []int{0, 1, 30, 33, 63} {
+					src, want := makeStrided(t, n, stride)
+					length := len(src)
+					if offset+n*Size > length {
+						length = offset + n*Size
+					}
+					storage := make([]byte, length)
+					copy(storage, src)
+					dst := storage[offset : offset+n*Size]
+					run(dst, storage[:len(src)], n, stride)
+					if !bytes.Equal(dst, want) {
+						t.Fatalf("path=%s n=%d stride=%d offset=%d overlap mismatch", name, n, stride, offset)
+					}
+				}
+			}
+		}
+	}
+}
+
+// TestFromPubkeys33RespectsBounds checks the output sentinel and digests at
+// the minimum source length. Guard-page tests also detect unused assembly reads.
 func TestFromPubkeys33RespectsBounds(t *testing.T) {
 	const (
 		n      = 9
@@ -273,8 +316,9 @@ func FuzzFromPubkeys33(f *testing.F) {
 		if n == 0 {
 			return
 		}
-		const stride = 64
-		src := make([]byte, (n-1)*stride+MsgLen)
+		stride := MsgLen + int(data[0]%66)
+		offset := int(data[len(data)-1] % 16)
+		src := make([]byte, offset+(n-1)*stride+MsgLen)[offset:]
 		for i := range src {
 			src[i] = 0xEE
 		}
@@ -286,10 +330,10 @@ func FuzzFromPubkeys33(f *testing.F) {
 			copy(want[i*Size:], d[:])
 		}
 		for name, run := range runners {
-			dst := make([]byte, n*Size)
+			dst := make([]byte, offset+n*Size)[offset:]
 			run(dst, src, n, stride)
 			if !bytes.Equal(dst, want) {
-				t.Fatalf("path=%s n=%d mismatch", name, n)
+				t.Fatalf("path=%s n=%d stride=%d offset=%d mismatch", name, n, stride, offset)
 			}
 		}
 	})

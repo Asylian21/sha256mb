@@ -7,8 +7,8 @@ import (
 )
 
 // benchPaths is the set of HASH160 implementations benchmarked head-to-head:
-// the active path (the fused kernel where one is built) and the staged
-// two-phase fallback, so PERFORMANCE.md can justify which is the arm64 default.
+// the public entry point, the staged fallback and runnable fused kernels,
+// so PERFORMANCE.md can justify which is the arm64 default.
 var benchPaths = map[string]func(dst, src []byte, n, stride int){
 	"active": FromPubkeys33,
 	"staged": StagedForTest,
@@ -25,7 +25,7 @@ func BenchmarkFromPubkeys33(b *testing.B) {
 		if !ok {
 			continue
 		}
-		for _, n := range []int{1, 64, 1024, 6144} {
+		for _, n := range []int{1, 2, 3, 4, 5, 6, 7, 64, 1024, 6143, 6144, 6145} {
 			b.Run(fmt.Sprintf("%s/n=%d", path, n), func(b *testing.B) {
 				src := make([]byte, (n-1)*stride+MsgLen)
 				dst := make([]byte, n*Size)

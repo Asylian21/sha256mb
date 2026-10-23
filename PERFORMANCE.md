@@ -211,6 +211,59 @@ retaining staged as the default; the 18-thread medians do not establish a
 statistically significant winner. See the archived [single-thread comparison](benchmarks/2026-10-04-m5-pro/root-final-single-benchstat.txt)
 and [18-thread comparison](benchmarks/2026-10-04-m5-pro/root-final-mode-benchstat.txt).
 
+## Apple M5 Pro follow-up validation (2026-10-05)
+
+The follow-up uses Go 1.27.1, `darwin/arm64`, `-pgo=off`, `GOMAXPROCS=1`,
+stride 64, and ten alternating A/B measurements per comparison. Assembly
+candidates are validated before timing and retained only after a significant
+improvement. All original SHA and fused assembly/generators are retained:
+
+| Candidate | Messages | Before | Candidate | Result |
+| --------- | -------- | ------ | --------- | ------ |
+| SHA setup/finalize and fixed-padding sharing | 6144 | 88.33 µs | 89.41 µs | no demonstrated gain, `p=0.280` |
+| SHA padding/constants/dead-copy changes only | 6144 | 88.72 µs | 88.41 µs | no demonstrated gain, `p=0.579` |
+| Fused SHA phase simplification | 6144 | 343.4 µs | 349.4 µs | 1.71% less throughput, `p<0.001` |
+| Direct short-batch HASH160 with stack results | 2 | 301.6 ns | 326.9 ns | 8.39% more time, `p<0.001` |
+| Direct short-batch HASH160 with stack results | 3 | 452.7 ns | 486.6 ns | 7.50% more time, `p<0.001` |
+
+The [SHA setup comparison](benchmarks/2026-10-05-m5-pro/sha-setup-candidate-benchstat.txt),
+[padding-only comparison](benchmarks/2026-10-05-m5-pro/sha-padding-candidate-benchstat.txt),
+[fused comparison](benchmarks/2026-10-05-m5-pro/fused-sha-candidate-benchstat.txt),
+and [short-batch comparison](benchmarks/2026-10-05-m5-pro/hash160-short-batch-candidate-benchstat.txt)
+are archived with their raw measurements. Fewer instructions alone did not
+establish a SHA throughput gain. The production branch is limited to a single
+message: `sha256.Sum256` and the fixed-32-byte `ripemd160mb.Sum` primitive keep
+both intermediates on the stack before copying the digest to the destination.
+Larger batches use the original pooled pipeline.
+
+The final single-message branch was remeasured independently with ten samples
+per revision, 200 ms per sample, alternating A/B and B/A order:
+
+| Messages | Original | Selected | Result |
+| -------- | -------- | -------- | ------ |
+| 1 | 163.2 ns | 146.0 ns | 10.51% less time, 11.72% more throughput, `p<0.001` |
+| 2 | 301.2 ns | 302.7 ns | no demonstrated difference, `p=0.066` |
+| 3 | 452.3 ns | 453.9 ns | 0.35% more time, `p=0.007` |
+
+All three remain at zero bytes and allocations per call. The small dispatch
+cost at three messages is disclosed; the useful gain is limited to single
+messages and one-message fused tails. These measurements do not establish a
+large-batch or whole-application speedup. The [final comparison](benchmarks/2026-10-05-m5-pro/hash160-single-selected-benchstat.txt)
+and its raw [before](benchmarks/2026-10-05-m5-pro/hash160-single-selected-before.txt)
+and [after](benchmarks/2026-10-05-m5-pro/hash160-single-selected-after.txt)
+measurements are archived separately from the rejected broad candidate.
+
+Validation covers 616 protected-page configurations across SHA scalar/SHA4 and
+all runnable HASH160 paths, every four-lane tail, tight/odd/production strides,
+and overlapping small buffers. Every HASH160 path is checked for zero
+allocations at counts 1 through 7. Differential fuzzing varies strides 33–98
+and byte alignment 0–15; two 30-second runs passed 1,507,235 SHA and 1,893,773
+HASH160 executions. Native/forced/race suites, `go vet`, `gofmt`, and generated
+assembly reproducibility pass. Native tests also pass on Go 1.22.5, and the
+pinned `staticcheck` 2024.1.1 passes using that supported toolchain. Statement
+coverage is 97.7% for SHA and 87.7% for HASH160. Linux amd64/arm64 and Windows
+amd64 test binaries compile; those targets were not executed on this Mac.
+
 ## Recording results
 
 When you capture a new baseline, update the smoke-benchmark table in

@@ -89,12 +89,10 @@ func TestHash33TailHandling(t *testing.T) {
 	}
 }
 
-// TestHash33RespectsBounds guarantees Hash33 writes exactly n*Size bytes and
-// reads at most (n-1)*stride+33 bytes, leaving surrounding sentinel bytes
-// untouched even when the caller passes larger backing arrays. The src buffer
-// is sized to the exact minimum so any over-read trips the runtime bounds
-// check, and the inter-message padding is poisoned so any in-bounds over-read
-// corrupts the digest.
+// TestHash33RespectsBounds checks the trailing output sentinel and digest
+// correctness when the caller passes larger backing arrays. The src buffer
+// is sized to the exact minimum, and padding is poisoned so incorporating it
+// corrupts the digest. Guard-page tests also detect unused assembly over-reads.
 func TestHash33RespectsBounds(t *testing.T) {
 	const (
 		n      = 9
